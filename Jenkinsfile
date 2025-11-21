@@ -5,6 +5,10 @@ pipeline {
         nodejs 'NodeJs_18' 
     }
 
+    environment {
+        DOCKERHUB_REPO = "chsl123/mirrorlit"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -29,7 +33,7 @@ pipeline {
                 '''
             }
         }
-    }
+    
 
     stage('Build Docker Image') {
             steps {
