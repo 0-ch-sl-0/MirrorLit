@@ -5,6 +5,7 @@ module.exports = {
     password: process.env.DB_PW,
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     dialect: "mysql",
     timezone: '+09:00',
     logging: false
@@ -14,6 +15,7 @@ module.exports = {
     password: process.env.DB_PW,
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     dialect: "mysql",
     timezone: '+09:00',
     logging: false
