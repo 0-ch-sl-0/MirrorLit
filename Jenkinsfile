@@ -64,8 +64,8 @@ pipeline {
                 branch 'develop'
             }
             steps {
-                sh "sed -i 's/mirrorlit:latest/mirrorlit:${env.BUILD_ID}/g' deployment.yaml"
-                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
+                sh "sed -i 's/mirrorlit:latest/mirrorlit:${env.BUILD_NUMBER}/g' deployment.yaml"
+                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_NUMBER, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
             }
         }
     }
