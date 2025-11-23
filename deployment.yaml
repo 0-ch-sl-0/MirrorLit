@@ -15,7 +15,6 @@ spec:
             containers:
                 - name: mirrorlit
                   image: chsl123/mirrorlit:latest
-                  imagePullPolicy: Always
                   env:
                       - name: DB_HOST
                         value: "34.64.145.17"
