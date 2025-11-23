@@ -27,16 +27,10 @@ pipeline {
         }
 
         stage('Run Tests') {
-            steps {
-                sh '''
-                if npm test; then
-                  echo "테스트 성공"
-                else
-                  echo "테스트 실패"
-                fi
-                '''
-            }
+    steps {
+        sh 'npm test' // npm test가 0이 아닌 코드를 반환하면, 이 스테이지는 실패하고 빌드가 중단됩니다.
         }
+    }
     
 
     stage('Build Docker Image') {
@@ -64,7 +58,7 @@ pipeline {
                 branch 'develop'
             }
             steps {
-                sh "sed -i 's/mirrorlit:latest/mirrorlit:${env.BUILD_ID}/g' deployment.yaml"
+                sh "sed -i '' 's/mirrorlit:latest/mirrorlit:${env.BUILD_ID}/g' deployment.yaml"
                 step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
             }
         }
