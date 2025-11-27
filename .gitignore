@@ -2,3 +2,4 @@
 node_modules/
 middlewares/id_rsa.pub
 middlewares/id_rsa.pub.pub
+mirrorlit-secret.yaml
