@@ -48,7 +48,7 @@ pipeline {
 
         stage('Deploy to GKE') {
             when {
-                branch 'develop'
+                branch 'develop' //master로 바꾸기
             }
             steps {
                sh "sed -i 's/mirrorlit:latest/mirrorlit:${env.BUILD_NUMBER}/g' deployment.yaml"
