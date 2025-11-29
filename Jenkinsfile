@@ -46,28 +46,13 @@ pipeline {
             }
         }
 
-           stage('Deploy to GKE') {
+        stage('Deploy to GKE') {
             when {
-                branch 'develop'
+                branch 'develop' //master로 바꾸기
             }
             steps {
-
-                // 안전한 방식으로 이미지 태그 교체
-                sh "sed -i \"s|image:.*|image: ${DOCKERHUB_REPO}:${BUILD_NUMBER}|g\" deployment.yaml"
-
-                // verifyDeployments = false (검증은 rollout status로 직접 처리)
-                step([
-                    $class: 'KubernetesEngineBuilder',
-                    projectId: env.PROJECT_ID,
-                    clusterName: env.CLUSTER_NAME,
-                    location: env.LOCATION,
-                    manifestPattern: 'deployment.yaml',
-                    credentialsId: env.CREDENTIALS_ID,
-                    verifyDeployments: false
-                ])
-
-                // 롤아웃 정상 확인 (이게 진짜 중요!)
-                sh "kubectl rollout status deployment/mirrorlit-deploy --timeout=60s"
+               sh "sed -i 's/mirrorlit:latest/mirrorlit:${env.BUILD_NUMBER}/g' deployment.yaml"
+                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
             }
         }
     }
