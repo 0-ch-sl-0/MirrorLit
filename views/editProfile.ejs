@@ -1,0 +1,57 @@
+<div class="container auth-container">
+  <h1>회원정보 수정</h1>
+
+  <% if (messages.error && messages.error.length) { %>
+    <div class="alert alert-error">
+      <% messages.error.forEach(function (msg) { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (messages.success && messages.success.length) { %>
+    <div class="alert alert-success">
+      <% messages.success.forEach(function (msg) { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <form action="/users/edit" method="POST">
+    <div class="form-group">
+      <label for="id">아이디</label>
+      <input
+        type="text"
+        id="id"
+        name="id"
+        value="<%= user.id %>"
+        readonly
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="name">닉네임</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        value="<%= user.name %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="email">이메일</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        value="<%= user.email %>"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn-primary">수정 완료</button>
+  </form>
+</div>
+
