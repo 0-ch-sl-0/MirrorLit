@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mirrorlit-deploy
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mirrorlit
+    template:
+        metadata:
+            labels:
+                app: mirrorlit
+        spec:
+            containers:
+                - name: mirrorlit
+                  image: chsl123/mirrorlit:latest
+                  env:
+                      - name: DB_HOST
+                        valueFrom:
+                            secretKeyRef:
+                                name: mirrorlit-secret
+                                key: DB_HOST
+                      - name: DB_USER
+                        valueFrom:
+                            secretKeyRef:
+                                name: mirrolit-secret
+                                key: DB_USER
+                      - name: DB_PW
+                        valueFrom:
+                            secretKeyRef:
+                                name: mirrorlit-secret
+                                key: DB_PW
+                      - name: DB_PORT
+                        valueFrom:
+                            secretKeyRef:
+                                name: mirrorlit-secret
+                                key: DB_PORT
+                      - name: DB_NAME
+                        valueFrom:
+                            secretKeyRef:
+                                name: mirrorlit-secret
+                                key: DB_NAME
+                  ports:
+                      - containerPort: 3000

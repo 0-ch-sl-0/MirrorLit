@@ -116,6 +116,12 @@ db.sequelize.sync();
 // db 수정이 있는 경우
 // db.sequelize.sync({ alter: true });
 
+console.log("DB HOST:", process.env.DB_HOST);
+console.log("DB USER:", process.env.DB_USER);
+console.log("DB PW:", process.env.DB_PW);
+console.log("DB PORT:", process.env.DB_PORT);
+
+
 // set local data
 app.use(async (req, res, next) => {
   try {
@@ -151,7 +157,7 @@ app.use(async (req, res, next) => {
       res.locals.commentalerts.push(...notifications);
 
       // 새로운 사용자 알림이 있는지 확인 (새로운 댓글 알림이 이미 있다면 확인하지 않음)
-      if(res.locals.isThereNewAlert === false) {
+      if (res.locals.isThereNewAlert === false) {
         res.locals.isThereNewAlert = await notifications.some(ntf => ntf.is_checked === 'N');
       }
     }
