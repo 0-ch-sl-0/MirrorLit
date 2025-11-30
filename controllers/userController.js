@@ -374,7 +374,7 @@ const updateProfile = async (req, res) => {
       return res.redirect("/users/mypage");
     }
     
-    // --- 이메일 중복 확 ---
+    // --- 이메일 중복 확인 ---
     if (action === "send-code") {
       // 이메일이 실제로 변경되는 경우에만 코드 전송
       if (email === user.email) {
@@ -382,7 +382,7 @@ const updateProfile = async (req, res) => {
       } else {
         // 다른 사용자가 이미 쓰는 이메일인지 확인
         const existing = await db.User.findOne({
-          where: { email, user_id: { [db.Sequelize.Op.ne]: user.user_id } }
+          where: { email, user_id: { [Op.ne]: user.user_id } }
         });
         if (existing) {
           req.flash("error", "이미 사용 중인 이메일입니다.");
@@ -398,7 +398,7 @@ const updateProfile = async (req, res) => {
           console.log(`[DEBUG] 프로필 변경용 인증 코드: ${email} / ${code}`);
           req.flash("success", "해당 이메일로 인증 코드가 전송되었습니다.");
         }
-      }인
+      }
 
       // 화면에는 사용자가 방금 입력한 값이 다시 보이도록
       return res.render("editProfile", {
