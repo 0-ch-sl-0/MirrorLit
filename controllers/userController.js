@@ -574,7 +574,7 @@ module.exports = {
   checkPasswordForEdit,
   showEditProfileForm,
   updateProfile,
-  chekNickname,
+  checkNickname,
   changePassword
 };
 
