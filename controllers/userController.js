@@ -364,13 +364,74 @@ const updateProfile = async (req, res) => {
     return res.redirect("/users/edit/verify");
   }
 
-  const { name, email } = req.body; // 아이디는 수정 안 함
+  const { name, email, eemailCode, action } = req.body; // 아이디는 수정 안 함
 
   try {
     const user = await db.User.findByPk(req.user.user_id);
     if (!user) {
       req.flash("error", "사용자를 찾을 수 없습니다.");
       return res.redirect("/users/mypage");
+    }
+    
+    // --- 이메일 중복 확 ---
+    if (action === "send-code") {
+      // 이메일이 실제로 변경되는 경우에만 코드 전송
+      if (email === user.email) {
+        req.flash("error", "현재 이메일과 동일합니다. 다른 이메일을 입력해주세요.");
+      } else {
+        // 다른 사용자가 이미 쓰는 이메일인지 확인
+        const existing = await db.User.findOne({
+          where: { email, user_id: { [db.Sequelize.Op.ne]: user.user_id } }
+        });
+        if (existing) {
+          req.flash("error", "이미 사용 중인 이메일입니다.");
+        } else {
+          const code = Math.floor(100000 + Math.random() * 900000).toString();
+          await db.EmailVerification.create({
+            user_id: user.user_id,
+            email,
+            code,
+            sent_at: new Date(),
+            verified: "N"
+          });
+          console.log(`[DEBUG] 프로필 변경용 인증 코드: ${email} / ${code}`);
+          req.flash("success", "해당 이메일로 인증 코드가 전송되었습니다.");
+        }
+      }인
+
+      // 화면에는 사용자가 방금 입력한 값이 다시 보이도록
+      return res.render("editProfile", {
+        user: { ...user.toJSON(), name, email },
+        messages: req.flash()
+      });
+    }
+
+    // 변경할 이메일로 인증코드 확인
+    if (email !== user.email) {
+      const record = await db.EmailVerification.findOne({
+        where: { email, code: emailCode, verified: "N" },
+        order: [["sent_at", "DESC"]]
+      });
+
+      if (!record) {
+        req.flash("error", "유효하지 않은 이메일 인증 코드입니다.");
+        return res.render("editProfile", {
+          user: { ...user.toJSON(), name, email },
+          messages: req.flash()
+        });
+      }
+
+      const now = new Date();
+      const sentTime = new Date(record.sent_at);
+      if (now - sentTime > 5 * 60 * 1000) {
+        req.flash("error", "이메일 인증 코드가 만료되었습니다.");
+        return res.render("editProfile", {
+          user: { ...user.toJSON(), name, email },
+          messages: req.flash()
+        });
+      }
+
+      await record.update({ verified: "Y", verified_at: now });
     }
 
     user.name = name;
