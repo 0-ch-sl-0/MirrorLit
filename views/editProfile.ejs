@@ -39,6 +39,7 @@
         value="<%= user.name %>"
         required
       />
+<small class="field-help">닉네임은 다른 사용자의 닉네임과 중복될 수 없습니다.</small>
     </div>
 
     <div class="form-group">
@@ -50,6 +51,25 @@
         value="<%= user.email %>"
         required
       />
+<button type="submit" name="action" value="send-code" class="btn-secondary">
+        인증코드 보내기
+      </button>
+      <small class="field-help">
+        이메일을 변경하려면 먼저 새 이메일로 인증코드를 보내주세요.
+      </small>
+    </div>
+
+     <!-- 이메일 인증 코드 입력 -->
+    <div class="form-group">
+      <label for="emailCode">이메일 인증 코드</label>
+      <input
+        type="text"
+        id="emailCode"
+        name="emailCode"
+      />
+      <small class="field-help">
+        이메일을 변경하는 경우, 받은 인증 코드를 입력한 후 "수정 완료"를 눌러주세요.
+      </small>
     </div>
 
     <button type="submit" class="btn-primary">수정 완료</button>
