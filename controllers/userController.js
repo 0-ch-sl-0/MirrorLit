@@ -1,5 +1,6 @@
 const db = require("../models");
 const User = db.User;
+const { Op } = db.Sequelize; //회원정보 수정 기능을 위해 추
 //const crypto = require("crypto");
 
 // 이메일로 유저 찾기
@@ -43,7 +44,7 @@ const create = async (req, res, next) => {
   db.User.register(
     new db.User({
       name,
-      id,
+      id,가
       email,
       rank_id: 1,
       email_verified: 'Y'
@@ -413,6 +414,45 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// --- 닉네임 중복 확인 ---
+const checkNickname = async (req, res) => {
+  const { name } = req.query;
+
+  if (!name || !name.trim()) {
+    return res.json({
+      available: false,
+      message: "닉네임을 입력해주세요."
+    });
+  }
+
+  try {
+    const existing = await User.findOne({
+      where: {
+        name,
+        user_id: { [Op.ne]: req.user.user_id }
+      }
+    });
+
+    if (existing) {
+      return res.json({
+        available: false,
+        message: "중복입니다."
+      });
+    }
+
+    return res.json({
+      available: true,
+      message: "사용 가능한 닉네임입니다."
+    });
+  } catch (err) {
+    console.error("닉네임 중복 확인 오류:", err);
+    return res.status(500).json({
+      available: false,
+      message: "오류가 발생했습니다."
+    });
+  }
+};
+
 module.exports = {
   create,
   login,
@@ -429,5 +469,6 @@ module.exports = {
   checkPasswordForEdit,
   showEditProfileForm,
   updateProfile
+  checkNickname	
 };
 
