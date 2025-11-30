@@ -1,6 +1,5 @@
 const db = require("../models");
 const User = db.User;
-const { Op } = db.Sequelize; //회원정보 수정 기능을 위해 추가
 //const crypto = require("crypto");
 
 // 이메일로 유저 찾기
@@ -115,7 +114,6 @@ const login = (req, res) => {
 const logout = (req, res, next) => {
   req.logout(function (err) {
     if (err) { return next(err); }
-
 
     // 마이페이지에서 로그아웃 할 경우 마이페이지에 계속 남아있는 오류가 발생하여 리다이렉트 수정, 메인페이지로 이동
     req.session.destroy(() => {
@@ -298,15 +296,14 @@ const getMyPage = async (req, res) => {
   }
 };
 
-//회원정보 수정 관련 코드 추가
-// 비밀번호 확인 폼
+// 회원정보 수정 - 비밀번호 확인 폼
 const showEditVerifyForm = (req, res) => {
   res.render("verifyPassword", {
     messages: req.flash()
   });
 };
 
-//비밀번호 확인 처리(비밀번호가 일치해야 회원정보 수정 가능)
+// 회원정보 수정 - 비밀번호 확인 처리
 const checkPasswordForEdit = async (req, res) => {
   const { password } = req.body;
 
@@ -317,15 +314,16 @@ const checkPasswordForEdit = async (req, res) => {
       return res.redirect("/users/mypage");
     }
 
+    // userModel.js에서 정의한 passwordComparison 사용
     user.passwordComparison(password, (err, userMatched, info) => {
       if (err || !userMatched) {
-        req.flash("error", "비밀번호가 올바르지 않습니다.");
+        req.flash("error", "비밀번호가 일치하지 않습니다.");
         return res.redirect("/users/edit/verify");
       }
 
       // 비밀번호 검증 성공 → 세션에 플래그 저장
       req.session.profileEditAllowed = true;
-      return res.redirect("/users/edit");
+      res.redirect("/users/edit");
     });
   } catch (err) {
     console.error("비밀번호 확인 오류:", err);
@@ -334,7 +332,7 @@ const checkPasswordForEdit = async (req, res) => {
   }
 };
 
-//회원정보 수정 폼
+// 회원정보 수정 폼
 const showEditProfileForm = async (req, res) => {
   if (!req.session.profileEditAllowed) {
     req.flash("error", "비밀번호 인증 후 이용 가능합니다.");
@@ -353,19 +351,20 @@ const showEditProfileForm = async (req, res) => {
       messages: req.flash()
     });
   } catch (err) {
+    console.error("회원정보 수정 폼 로딩 오류:", err);
     req.flash("error", "회원정보를 불러오는 중 오류가 발생했습니다.");
     res.redirect("/users/mypage");
   }
 };
 
-//회원정보 수정(아이디는 수정 불가)
+// 회원정보 수정 저장
 const updateProfile = async (req, res) => {
   if (!req.session.profileEditAllowed) {
     req.flash("error", "비밀번호 인증 후 이용 가능합니다.");
     return res.redirect("/users/edit/verify");
   }
 
-  const { name, email } = req.body;
+  const { name, email } = req.body; // 아이디는 수정 안 함
 
   try {
     const user = await db.User.findByPk(req.user.user_id);
@@ -379,7 +378,7 @@ const updateProfile = async (req, res) => {
 
     await user.save();
 
-    // 한 번 사용한 플래그 제거
+    // 한 번 쓰고 나면 플래그 제거
     delete req.session.profileEditAllowed;
 
     req.flash("success", "회원정보가 수정되었습니다.");
@@ -414,91 +413,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// --- 닉네임 중복 확인 ---
-const checkNickname = async (req, res) => {
-  const { name } = req.query;
-
-  if (!name || !name.trim()) {
-    return res.json({
-      available: false,
-      message: "닉네임을 입력해주세요."
-    });
-  }
-
-  try {
-    const existing = await User.findOne({
-      where: {
-        name,
-        user_id: { [Op.ne]: req.user.user_id } // 본인 제외
-      }
-    });
-
-    if (existing) {
-      return res.json({
-        available: false,
-        message: "중복입니다."
-      });
-    }
-
-    return res.json({
-      available: true,
-      message: "사용 가능한 닉네임입니다."
-    });
-  } catch (err) {
-    console.error("닉네임 중복 확인 오류:", err);
-    return res.status(500).json({
-      available: false,
-      message: "오류가 발생했습니다."
-    });
-  }
-};
-
-// --- 비밀번호 변경 (마이페이지 내) ---
-const changePassword = async (req, res) => {
-  const { currentPassword, newPassword, confirmNewPassword } = req.body;
-
-  try {
-    const user = await User.findByPk(req.user.user_id);
-    if (!user) {
-      req.flash("error", "사용자를 찾을 수 없습니다.");
-      return res.redirect("/users/mypage");
-    }
-
-    // 1) 현재 비밀번호 확인
-    user.passwordComparison(currentPassword, (err, userMatched) => {
-      if (err || !userMatched) {
-        req.flash("error", "현재 비밀번호가 올바르지 않습니다.");
-        return res.redirect("/users/edit"); // 다시 회원정보 수정 페이지로
-      }
-
-      // 2) 새 비밀번호 일치 여부 확인
-      if (newPassword !== confirmNewPassword) {
-        req.flash("error", "새 비밀번호와 확인이 일치하지 않습니다.");
-        return res.redirect("/users/edit");
-      }
-
-      // 3) 실제 비밀번호 변경
-      user.setPassword(newPassword, async (err, userWithPassword) => {
-        if (err) {
-          console.error("비밀번호 변경 오류:", err);
-          req.flash("error", "비밀번호 변경 중 오류가 발생했습니다.");
-          return res.redirect("/users/edit");
-        }
-
-        await userWithPassword.save();
-
-        req.flash("success", "비밀번호가 성공적으로 변경되었습니다.");
-        return res.redirect("/users/mypage"); // 변경 후 마이페이지로
-      });
-    });
-  } catch (err) {
-    console.error("비밀번호 변경 처리 중 오류:", err);
-    req.flash("error", "비밀번호 변경 중 서버 오류가 발생했습니다.");
-    res.redirect("/users/edit");
-  }
-};
-
-
 module.exports = {
   create,
   login,
@@ -514,8 +428,6 @@ module.exports = {
   showEditVerifyForm,
   checkPasswordForEdit,
   showEditProfileForm,
-  updateProfile,
-  checkNickname,
-  changePassword
+  updateProfile
 };
 
