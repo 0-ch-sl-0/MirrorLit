@@ -514,6 +514,50 @@ const checkNickname = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+  try {
+    const user = await User.findByPk(req.user.user_id);
+    if (!user) {
+      req.flash("error", "사용자를 찾을 수 없습니다.");
+      return res.redirect("/users/mypage");
+    }
+
+    // 1) 현재 비밀번호 확인
+    user.passwordComparison(currentPassword, (err, userMatched) => {
+      if (err || !userMatched) {
+        req.flash("error", "현재 비밀번호가 올바르지 않습니다.");
+        return res.redirect("/users/edit"); // 다시 회원정보 수정 페이지로
+      }
+
+      // 2) 새 비밀번호 일치 여부 확인
+      if (newPassword !== confirmNewPassword) {
+        req.flash("error", "새 비밀번호와 확인이 일치하지 않습니다.");
+        return res.redirect("/users/edit");
+      }
+
+      // 3) 실제 비밀번호 변경
+      user.setPassword(newPassword, async (err, userWithPassword) => {
+        if (err) {
+          console.error("비밀번호 변경 오류:", err);
+          req.flash("error", "비밀번호 변경 중 오류가 발생했습니다.");
+          return res.redirect("/users/edit");
+        }
+
+        await userWithPassword.save();
+
+        req.flash("success", "비밀번호가 성공적으로 변경되었습니다.");
+        return res.redirect("/users/mypage"); // 🔹 요구사항 5 반영
+      });
+    });
+  } catch (err) {
+    console.error("비밀번호 변경 처리 중 오류:", err);
+    req.flash("error", "비밀번호 변경 중 서버 오류가 발생했습니다.");
+    res.redirect("/users/edit");
+  }
+};
+
 module.exports = {
   create,
   login,
