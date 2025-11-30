@@ -39,8 +39,15 @@
         value="<%= user.name %>"
         required
       />
-<small class="field-help">닉네임은 다른 사용자의 닉네임과 중복될 수 없습니다.</small>
-    </div>
+      <button type="button" id="btn-check-name" class="btn-secondary">
+      중복 확인
+    </button>
+  </div>
+  <small class="field-help">
+    닉네임은 다른 사용자의 닉네임과 중복될 수 없습니다.
+  </small>
+  <div id="nickname-message" style="margin-top:4px; font-size:0.9rem;"></div>  
+ </div>
 
     <div class="form-group">
       <label for="email">이메일</label>
@@ -54,6 +61,7 @@
 <button type="submit" name="action" value="send-code" class="btn-secondary">
         인증코드 보내기
       </button>
+      </div>
       <small class="field-help">
         이메일을 변경하려면 먼저 새 이메일로 인증코드를 보내주세요.
       </small>
@@ -66,7 +74,9 @@
         type="text"
         id="emailCode"
         name="emailCode"
-      />
+        placeholder="인증코드 입력"
+      </div>
+      
       <small class="field-help">
         이메일을 변경하는 경우, 받은 인증 코드를 입력한 후 "수정 완료"를 눌러주세요.
       </small>
@@ -74,4 +84,41 @@
 
     <button type="submit" class="btn-primary">수정 완료</button>
   </form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const btnCheckName = document.getElementById("btn-check-name");
+    const inputName = document.getElementById("name");
+    const nicknameMsg = document.getElementById("nickname-message");
+
+    if (!btnCheckName) return;
+
+    btnCheckName.addEventListener("click", function () {
+      const name = inputName.value.trim();
+      if (!name) {
+        nicknameMsg.textContent = "닉네임을 입력해주세요.";
+        nicknameMsg.style.color = "red";
+        return;
+      }
+
+      fetch(`/users/check-name?name=${encodeURIComponent(name)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          nicknameMsg.textContent = data.message;
+
+          if (data.available) {
+            nicknameMsg.style.color = "green"; // 사용 가능 → 초록색
+          } else {
+            nicknameMsg.style.color = "red";   // 중복/오류 → 빨간색
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          nicknameMsg.textContent = "오류가 발생했습니다.";
+          nicknameMsg.style.color = "red";
+        });
+    });
+  });
+</script>
+
 </div>
