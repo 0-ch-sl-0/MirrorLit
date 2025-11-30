@@ -1,6 +1,6 @@
 const db = require("../models");
 const User = db.User;
-const { Op } = db.Sequelize; //회원정보 수정 기능을 위해 추
+const { Op } = db.Sequelize; //회원정보 수정 기능을 위해 추가
 //const crypto = require("crypto");
 
 // 이메일로 유저 찾기
@@ -44,7 +44,7 @@ const create = async (req, res, next) => {
   db.User.register(
     new db.User({
       name,
-      id,가
+      id,
       email,
       rank_id: 1,
       email_verified: 'Y'
@@ -115,6 +115,7 @@ const login = (req, res) => {
 const logout = (req, res, next) => {
   req.logout(function (err) {
     if (err) { return next(err); }
+
 
     // 마이페이지에서 로그아웃 할 경우 마이페이지에 계속 남아있는 오류가 발생하여 리다이렉트 수정, 메인페이지로 이동
     req.session.destroy(() => {
@@ -318,13 +319,13 @@ const checkPasswordForEdit = async (req, res) => {
 
     user.passwordComparison(password, (err, userMatched, info) => {
       if (err || !userMatched) {
-        req.flash("error", "비밀번호가 일치하지 않습니다.");
+        req.flash("error", "비밀번호가 올바르지 않습니다.");
         return res.redirect("/users/edit/verify");
       }
 
       // 비밀번호 검증 성공 → 세션에 플래그 저장
       req.session.profileEditAllowed = true;
-      res.redirect("/users/edit");
+      return res.redirect("/users/edit");
     });
   } catch (err) {
     console.error("비밀번호 확인 오류:", err);
@@ -352,7 +353,6 @@ const showEditProfileForm = async (req, res) => {
       messages: req.flash()
     });
   } catch (err) {
-    console.error("회원정보 수정 폼 로딩 오류:", err);
     req.flash("error", "회원정보를 불러오는 중 오류가 발생했습니다.");
     res.redirect("/users/mypage");
   }
@@ -429,7 +429,7 @@ const checkNickname = async (req, res) => {
     const existing = await User.findOne({
       where: {
         name,
-        user_id: { [Op.ne]: req.user.user_id }
+        user_id: { [Op.ne]: req.user.user_id } // 본인 제외
       }
     });
 
@@ -453,6 +453,52 @@ const checkNickname = async (req, res) => {
   }
 };
 
+// --- 비밀번호 변경 (마이페이지 내) ---
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+  try {
+    const user = await User.findByPk(req.user.user_id);
+    if (!user) {
+      req.flash("error", "사용자를 찾을 수 없습니다.");
+      return res.redirect("/users/mypage");
+    }
+
+    // 1) 현재 비밀번호 확인
+    user.passwordComparison(currentPassword, (err, userMatched) => {
+      if (err || !userMatched) {
+        req.flash("error", "현재 비밀번호가 올바르지 않습니다.");
+        return res.redirect("/users/edit"); // 다시 회원정보 수정 페이지로
+      }
+
+      // 2) 새 비밀번호 일치 여부 확인
+      if (newPassword !== confirmNewPassword) {
+        req.flash("error", "새 비밀번호와 확인이 일치하지 않습니다.");
+        return res.redirect("/users/edit");
+      }
+
+      // 3) 실제 비밀번호 변경
+      user.setPassword(newPassword, async (err, userWithPassword) => {
+        if (err) {
+          console.error("비밀번호 변경 오류:", err);
+          req.flash("error", "비밀번호 변경 중 오류가 발생했습니다.");
+          return res.redirect("/users/edit");
+        }
+
+        await userWithPassword.save();
+
+        req.flash("success", "비밀번호가 성공적으로 변경되었습니다.");
+        return res.redirect("/users/mypage"); // 변경 후 마이페이지로
+      });
+    });
+  } catch (err) {
+    console.error("비밀번호 변경 처리 중 오류:", err);
+    req.flash("error", "비밀번호 변경 중 서버 오류가 발생했습니다.");
+    res.redirect("/users/edit");
+  }
+};
+
+
 module.exports = {
   create,
   login,
@@ -468,7 +514,8 @@ module.exports = {
   showEditVerifyForm,
   checkPasswordForEdit,
   showEditProfileForm,
-  updateProfile
-  checkNickname	
+  updateProfile,
+  checkNickname,
+  changePassword
 };
 

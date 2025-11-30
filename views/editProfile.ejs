@@ -79,11 +79,47 @@
         placeholder="이메일로 받은 인증코드 입력"
       />
     </div>
-
-    <!-- ( 비밀번호 변경 폼 추가예정) -->
-
+    
     <button type="submit" name="action" value="update" class="btn-primary">
       수정 완료
+    </button>
+  </form>
+
+ <!-- 비밀번호 변경 -->
+<h2>비밀번호 변경</h2>
+  <form action="/users/change-password" method="POST" class="auth-form">
+    <div class="form-group">
+      <label for="currentPassword">현재 비밀번호</label>
+      <input
+        type="password"
+        id="currentPassword"
+        name="currentPassword"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="newPassword">새 비밀번호</label>
+      <input
+        type="password"
+        id="newPassword"
+        name="newPassword"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="confirmNewPassword">새 비밀번호 확인</label>
+      <input
+        type="password"
+        id="confirmNewPassword"
+        name="confirmNewPassword"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn-primary">
+      비밀번호 변경
     </button>
   </form>
 
