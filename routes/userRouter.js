@@ -60,6 +60,13 @@ router.get(
   userController.showEditProfileForm
 );
 
+// 닉네임 중복 확인
+router.get(
+  "/check-name",
+  ensureAuthenticated,
+  userController.checkNickname
+);
+
 // 회원정보 수정 저장
 router.post(
   "/edit",
