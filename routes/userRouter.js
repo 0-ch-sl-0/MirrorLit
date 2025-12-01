@@ -67,7 +67,14 @@ router.get(
   userController.checkNickname
 );
 
-// 비밀번호 변경 (마이페이지 내에서)
+// 비밀번호 변경 폼
+router.get(
+  "/change-password",
+  ensureAuthenticated,
+  userController.showChangePasswordForm
+);
+
+// 비밀번호 변경 처리
 router.post(
   "/change-password",
   ensureAuthenticated,
