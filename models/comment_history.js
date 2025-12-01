@@ -17,8 +17,8 @@ module.exports = (sequelize, Sequelize) => {
         model: "comments",
         key: "comment_id"
       },
-     // onDelete: "CASCADE"
-      // primaryKey: true 
+      onDelete: "CASCADE"
+      primaryKey: true // ✅ 복합 기본키 2
     },
     
     user_id: {
@@ -29,7 +29,7 @@ module.exports = (sequelize, Sequelize) => {
         key: "user_id"
       },
       onDelete: "CASCADE",
-      primaryKey: true // ✅ 복합 기본키 2
+      primaryKey: true // ✅ 복합 기본키 3
     }
   },
   {

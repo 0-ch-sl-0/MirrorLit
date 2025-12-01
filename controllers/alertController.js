@@ -80,47 +80,46 @@ exports.markNotificationAsRead = async (req, res) => {
 
 // 모든 알림 읽음 처리
 exports.markAlertAsReadAll = async (req, res) => {
-  try {
-    // 사용자의 모든 댓글 알림 확인
-    const userId = req.params.user_id;
+    try {
+        const userId = req.params.user_id;
 
-    const alerts = await CommentAlert.findAll({
-      where: { user_id: userId }
-    });
+        // ✅ 댓글 알림들
+        const alerts = await CommentAlert.findAll({
+            where: { user_id: userId }
+        });
 
-    // 각 댓글 알림을 읽음으로 표시
-    await alerts.forEach(alr => {
-      if(alr.getDataValue('is_checked') === 'N')
-        CommentAlert.update(
-          { is_checked: 'Y'},
-          { where: { alert_id: alr.alert_id } }
-        );
-    });
-    console.log("모든 댓글 알림을 읽음으로 표시했습니다.");
+        for (const alr of alerts) {
+            if (alr.getDataValue('is_checked') === 'N') {
+                await CommentAlert.update(
+                    { is_checked: 'Y' },
+                    { where: { alert_id: alr.alert_id } }
+                );
+            }
+        }
+        console.log("모든 댓글 알림을 읽음으로 표시했습니다.");
 
+        // ✅ 사용자 알림들
+        const notifications = await Notification.findAll({
+            where: { user_id: userId }
+        });
 
-    // 사용자의 모든 사용자 알림 확인
-    const notifications = await Notification.findAll({
-      where: { user_id: userId }
-    });
+        for (const ntf of notifications) {
+            if (ntf.getDataValue('is_checked') === 'N') {
+                await Notification.update(
+                    { is_checked: 'Y' },
+                    { where: { notification_id: ntf.notification_id } }
+                );
+            }
+        }
+        console.log("모든 사용자 알림을 읽음으로 표시했습니다.");
 
-    // 각 댓글 알림을 읽음으로 표시
-    await notifications.forEach(ntf => {
-      if(ntf.getDataValue('is_checked') === 'N')
-        Notification.update(
-          { is_checked: 'Y'},
-          { where: { notification_id: ntf.notification_id } }
-        );
-    });
-    console.log("모든 사용자 알림을 읽음으로 표시했습니다.");
-
-    // 기존 페이지 또는 홈페이지로 redirection
-    return res.redirect(req.headers.referer || "/home");
-  } catch (err) {
-    console.error("알림 모두 읽음 처리 실패:", err);
-    res.status(500).json({ message: "모든 알림 상태 변경 실패" });
-  }
+        return res.redirect(req.headers.referer || "/home");
+    } catch (err) {
+        console.error("알림 모두 읽음 처리 실패:", err);
+        res.status(500).json({ message: "모든 알림 상태 변경 실패" });
+    }
 };
+
 
 // 댓글 알림 삭제
 exports.deleteAlert = async (req, res) => {
@@ -154,35 +153,36 @@ exports.deleteNotification = async (req, res) => {
 
 // 모든 알림 삭제
 exports.deleteAlertAll = async (req, res) => {
-  try {
-    // 사용자의 모든 댓글 알림 확인
-    const userId = req.params.user_id;
+    try {
+        const userId = req.params.user_id;
 
-    const alerts = await CommentAlert.findAll({
-      where: { user_id: userId }
-    });
+        // ✅ 댓글 알림 삭제
+        const alerts = await CommentAlert.findAll({
+            where: { user_id: userId }
+        });
 
-    // 각 댓글 알림 삭제
-    await alerts.forEach(alr => {
-      CommentAlert.destroy({ where: { alert_id: alr.alert_id } });
-    });
-    console.log("모든 댓글 알림을 삭제했습니다.");
+        for (const alr of alerts) {
+            await CommentAlert.destroy({
+                where: { alert_id: alr.alert_id }
+            });
+        }
+        console.log("모든 댓글 알림을 삭제했습니다.");
 
-    // 사용자의 모든 사용자 알림 확인
-    const notifications = await Notification.findAll({
-      where: { user_id: userId }
-    });
+        // ✅ 사용자 알림 삭제
+        const notifications = await Notification.findAll({
+            where: { user_id: userId }
+        });
 
-    // 각 사용자 알림 삭제
-    await notifications.forEach(ntf => {
-      Notification.destroy({ where: { notification_id: ntf.notification_id } });
-    });
-    console.log("모든 사용자 알림을 삭제했습니다.");
+        for (const ntf of notifications) {
+            await Notification.destroy({
+                where: { notification_id: ntf.notification_id }
+            });
+        }
+        console.log("모든 사용자 알림을 삭제했습니다.");
 
-    // 기존 페이지 또는 홈페이지로 redirection
-    return res.redirect(req.headers.referer || "/home");
-  } catch (err) {
-    console.error("알림 모두 삭제 실패:", err);
-    res.status(500).json({message: "모든 알림 삭제 실패" });
-  }
+        return res.redirect(req.headers.referer || "/home");
+    } catch (err) {
+        console.error("알림 모두 삭제 실패:", err);
+        res.status(500).json({ message: "모든 알림 삭제 실패" });
+    }
 };

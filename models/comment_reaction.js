@@ -33,7 +33,13 @@ module.exports = (sequelize, Sequelize) => {
     }
   }, {
     timestamps: false,
-    tableName: 'comment_reaction'
+    tableName: 'comment_reaction',
+    indexes: [
+      {
+        unique: true,
+        fields: ['comment_id', 'user_id']
+      }
+    ]
   });
 
   return CommentReaction;
