@@ -528,13 +528,13 @@ const changePassword = async (req, res) => {
     user.passwordComparison(currentPassword, (err, userMatched) => {
       if (err || !userMatched) {
         req.flash("error", "현재 비밀번호가 올바르지 않습니다.");
-        return res.redirect("/users/edit"); // 다시 회원정보 수정 페이지로
+        return res.redirect("/users/change-password"); 
       }
 
       // 2) 새 비밀번호 일치 여부 확인
       if (newPassword !== confirmNewPassword) {
         req.flash("error", "새 비밀번호와 확인이 일치하지 않습니다.");
-        return res.redirect("/users/edit");
+        return res.redirect("/users/change-password");
       }
 
       // 3) 실제 비밀번호 변경
@@ -542,20 +542,29 @@ const changePassword = async (req, res) => {
         if (err) {
           console.error("비밀번호 변경 오류:", err);
           req.flash("error", "비밀번호 변경 중 오류가 발생했습니다.");
-          return res.redirect("/users/edit");
+          return res.redirect("/users/change-password");
         }
 
         await userWithPassword.save();
 
         req.flash("success", "비밀번호가 성공적으로 변경되었습니다.");
-        return res.redirect("/users/mypage"); // 🔹 요구사항 5 반영
+        return res.redirect("/users/mypage"); 
       });
     });
   } catch (err) {
     console.error("비밀번호 변경 처리 중 오류:", err);
     req.flash("error", "비밀번호 변경 중 서버 오류가 발생했습니다.");
-    res.redirect("/users/edit");
+    res.redirect("/users/change-password");
   }
+};
+
+// 비밀번호 변경 폼 렌더링
+const showChangePasswordForm = (req, res) => {
+  // 로그인한 사용자 정보(req.user)를 넘겨서 아이디 표시
+  res.render("changePassword", {
+    user: req.user,
+    messages: req.flash()
+  });
 };
 
 module.exports = {
@@ -575,6 +584,7 @@ module.exports = {
   showEditProfileForm,
   updateProfile,
   checkNickname,
-  changePassword
+  changePassword,
+  showChangePasswordForm
 };
 
