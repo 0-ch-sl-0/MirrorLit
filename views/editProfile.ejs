@@ -117,56 +117,8 @@
     </button>
   </form>
 
-  <hr />
-
   <% /* ---------------------------------------------------
-       2. 비밀번호 변경 폼
-       - 현재 비밀번호 입력
-       - 새 비밀번호 입력
-       - 새 비밀번호 확인
-       - /users/change-password 로 별도 POST 요청
-     --------------------------------------------------- */ %>
-
-  <h2>비밀번호 변경</h2>
-
-  <form action="/users/change-password" method="POST" class="auth-form">
-    <div class="form-group">
-      <label for="currentPassword">현재 비밀번호</label>
-      <input
-        type="password"
-        id="currentPassword"
-        name="currentPassword"
-        required
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="newPassword">새 비밀번호</label>
-      <input
-        type="password"
-        id="newPassword"
-        name="newPassword"
-        required
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="confirmNewPassword">새 비밀번호 확인</label>
-      <input
-        type="password"
-        id="confirmNewPassword"
-        name="confirmNewPassword"
-        required
-      />
-    </div>
-
-    <button type="submit" class="btn-primary">
-      비밀번호 변경
-    </button>
-  </form>
-
-  <% /* ---------------------------------------------------
-       3. 닉네임 중복 확인
+       2. 닉네임 중복 확인
        - /users/check-name?name= 닉네임 으로 GET 요청
        - 성공/오류 메시지를 nickname-message에 표시
      --------------------------------------------------- */ %>
