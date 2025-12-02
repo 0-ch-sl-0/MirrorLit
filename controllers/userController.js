@@ -1,6 +1,6 @@
 const db = require("../models");
 const User = db.User;
-const { Op } = db.Sequelize; //회원정보 수정을 위해 함수 추
+const { Op } = db.Sequelize; //회원정보 수정을 위해 함수 추가
 //const crypto = require("crypto");
 
 // 이메일로 유저 찾기
@@ -365,7 +365,7 @@ const updateProfile = async (req, res) => {
     return res.redirect("/users/edit/verify");
   }
 
-  const { name, email, eemailCode, action } = req.body; // 아이디는 수정 안 함
+  const { name, email, emailCode, action } = req.body; // 아이디는 수정 안 함
 
   try {
     const user = await db.User.findByPk(req.user.user_id);
