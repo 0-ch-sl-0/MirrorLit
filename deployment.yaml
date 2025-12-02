@@ -4,7 +4,7 @@ metadata:
     name: mirrorlit-deploy
 spec:
     # 3으로 바꾸기
-    replicas: 1
+    replicas: 2
     selector:
         matchLabels:
             app: mirrorlit
