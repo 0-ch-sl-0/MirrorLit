@@ -374,7 +374,7 @@ const updateProfile = async (req, res) => {
       return res.redirect("/users/mypage");
     }
     
-    // --- 이메일 중복 확인 ---
+    // --- 이메일 중복 확인, 인증코들 발송 ---
     if (action === "send-code") {
       // 이메일이 실제로 변경되는 경우에만 코드 전송
       if (email === user.email) {
