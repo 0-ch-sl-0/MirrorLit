@@ -7,9 +7,9 @@ module.exports = (sequelize, Sequelize) => {
         key: "article_id"
       },
       allowNull: false,
-      primaryKey: true // ✅ 복합 기본키 1
+      primaryKey: true
     },
-	  
+
     comment_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
@@ -17,10 +17,10 @@ module.exports = (sequelize, Sequelize) => {
         model: "comments",
         key: "comment_id"
       },
-     // onDelete: "CASCADE"
-      // primaryKey: true 
+      onDelete: "CASCADE",
+      primaryKey: true
     },
-    
+
     user_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
@@ -29,13 +29,13 @@ module.exports = (sequelize, Sequelize) => {
         key: "user_id"
       },
       onDelete: "CASCADE",
-      primaryKey: true // ✅ 복합 기본키 2
+      primaryKey: true
     }
   },
-  {
-    timestamps: false,
-    tableName: 'comment_history'
-  });
+    {
+      timestamps: false,
+      tableName: 'comment_history'
+    });
 
   return CommentHistory;
 };
