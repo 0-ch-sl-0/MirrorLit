@@ -444,7 +444,7 @@ const updateProfile = async (req, res) => {
     delete req.session.profileEditAllowed;
 
     req.flash("success", "회원정보가 수정되었습니다.");
-    res.redirect("/users/mypage");
+    res.redirect("/users/edit");
   } catch (err) {
     console.error("회원정보 수정 오류:", err);
 
