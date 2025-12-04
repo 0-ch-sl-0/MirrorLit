@@ -548,7 +548,7 @@ const changePassword = async (req, res) => {
         await userWithPassword.save();
 
         req.flash("success", "비밀번호가 성공적으로 변경되었습니다.");
-        return res.redirect("/users/mypage"); 
+        return res.redirect("/users/change-password"); 
       });
     });
   } catch (err) {
