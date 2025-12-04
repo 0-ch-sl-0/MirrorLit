@@ -395,7 +395,7 @@ const updateProfile = async (req, res) => {
             sent_at: new Date(),
             verified: "N"
           });
-          console.log(`[DEBUG] 프로필 변경용 인증 코드: ${email} / ${code}`);
+          console.log(`프로필 변경용 인증 코드: ${email} / ${code}`);
           req.flash("success", "해당 이메일로 인증 코드가 전송되었습니다.");
         }
       }
