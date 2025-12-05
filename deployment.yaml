@@ -18,6 +18,6 @@ spec:
                   image: chsl123/mirrorlit:latest
                   envFrom:
                       - secretRef:
-                        name: mirrorlit-secret
+                            name: mirrorlit-secret
                   ports:
                       - containerPort: 3000
