@@ -1,5 +1,6 @@
 const db = require("../models");
 const User = db.User;
+const { Op } = db.Sequelize; //회원정보 수정을 위해 함수 추가
 //const crypto = require("crypto");
 
 // 이메일로 유저 찾기
@@ -296,6 +297,275 @@ const getMyPage = async (req, res) => {
   }
 };
 
+// 회원정보 수정 - 비밀번호 확인 폼
+const showEditVerifyForm = (req, res) => {
+  res.render("verifyPassword", {
+    messages: req.flash()
+  });
+};
+
+// 회원정보 수정 - 비밀번호 확인 처리
+const checkPasswordForEdit = async (req, res) => {
+  const { password } = req.body;
+
+  try {
+    const user = await db.User.findByPk(req.user.user_id);
+    if (!user) {
+      req.flash("error", "사용자를 찾을 수 없습니다.");
+      return res.redirect("/users/mypage");
+    }
+
+    // userModel.js에서 정의한 passwordComparison 사용
+    user.passwordComparison(password, (err, userMatched, info) => {
+      if (err || !userMatched) {
+        req.flash("error", "비밀번호가 일치하지 않습니다.");
+        return res.redirect("/users/edit/verify");
+      }
+
+      // 비밀번호 검증 성공 → 세션에 플래그 저장
+      req.session.profileEditAllowed = true;
+      res.redirect("/users/edit");
+    });
+  } catch (err) {
+    console.error("비밀번호 확인 오류:", err);
+    req.flash("error", "비밀번호 확인 중 오류가 발생했습니다.");
+    res.redirect("/users/edit/verify");
+  }
+};
+
+// 회원정보 수정 폼
+const showEditProfileForm = async (req, res) => {
+  if (!req.session.profileEditAllowed) {
+    req.flash("error", "비밀번호 인증 후 이용 가능합니다.");
+    return res.redirect("/users/edit/verify");
+  }
+
+  try {
+    const user = await db.User.findByPk(req.user.user_id);
+    if (!user) {
+      req.flash("error", "사용자를 찾을 수 없습니다.");
+      return res.redirect("/users/mypage");
+    }
+
+    res.render("editProfile", {
+      user,
+      messages: req.flash()
+    });
+  } catch (err) {
+    console.error("회원정보 수정 폼 로딩 오류:", err);
+    req.flash("error", "회원정보를 불러오는 중 오류가 발생했습니다.");
+    res.redirect("/users/mypage");
+  }
+};
+
+// 회원정보 수정 저장
+const updateProfile = async (req, res) => {
+  if (!req.session.profileEditAllowed) {
+    req.flash("error", "비밀번호 인증 후 이용 가능합니다.");
+    return res.redirect("/users/edit/verify");
+  }
+
+  const { name, email, emailCode, action } = req.body; // 아이디는 수정 안 함
+
+  try {
+    const user = await db.User.findByPk(req.user.user_id);
+    if (!user) {
+      req.flash("error", "사용자를 찾을 수 없습니다.");
+      return res.redirect("/users/mypage");
+    }
+    
+    // --- 이메일 중복 확인, 인증코들 발송 ---
+    if (action === "send-code") {
+      // 이메일이 실제로 변경되는 경우에만 코드 전송
+      if (email === user.email) {
+        req.flash("error", "현재 이메일과 동일합니다. 다른 이메일을 입력해주세요.");
+      } else {
+        // 다른 사용자가 이미 쓰는 이메일인지 확인
+        const existing = await db.User.findOne({
+          where: { email, user_id: { [Op.ne]: user.user_id } }
+        });
+        if (existing) {
+          req.flash("error", "이미 사용 중인 이메일입니다.");
+        } else {
+          const code = Math.floor(100000 + Math.random() * 900000).toString();
+          await db.EmailVerification.create({
+           user_id: user.user_id,
+            email,
+            code,
+            sent_at: new Date(),
+            verified: "N"
+          });
+          console.log(`프로필 변경용 인증 코드: ${email} / ${code}`);
+          req.flash("success", "해당 이메일로 인증 코드가 전송되었습니다.");
+        }
+      }
+
+      // 화면에는 사용자가 방금 입력한 값이 다시 보이도록
+      return res.render("editProfile", {
+        user: { ...user.toJSON(), name, email },
+        messages: req.flash()
+      });
+    }
+
+    // 변경할 이메일로 인증코드 확인
+    if (email !== user.email) {
+      const record = await db.EmailVerification.findOne({
+        where: { email, code: emailCode, verified: "N" },
+        order: [["sent_at", "DESC"]]
+      });
+
+      if (!record) {
+        req.flash("error", "유효하지 않은 이메일 인증 코드입니다.");
+        return res.render("editProfile", {
+          user: { ...user.toJSON(), name, email },
+          messages: req.flash()
+        });
+      }
+
+      const now = new Date();
+      const sentTime = new Date(record.sent_at);
+      if (now - sentTime > 5 * 60 * 1000) {
+        req.flash("error", "이메일 인증 코드가 만료되었습니다.");
+        return res.render("editProfile", {
+          user: { ...user.toJSON(), name, email },
+          messages: req.flash()
+        });
+      }
+
+      await record.update({ verified: "Y", verified_at: now });
+    }
+
+    user.name = name;
+    user.email = email;
+
+    await user.save();
+
+    // 한 번 쓰고 나면 플래그 제거
+    delete req.session.profileEditAllowed;
+
+    req.flash("success", "회원정보가 수정되었습니다.");
+    res.redirect("/users/edit");
+  } catch (err) {
+    console.error("회원정보 수정 오류:", err);
+
+    if (err.name === "SequelizeUniqueConstraintError") {
+      const field = err.errors[0].path;
+      let message = "";
+
+      switch (field) {
+        case "email":
+          message = "이미 사용 중인 이메일입니다.";
+          break;
+        case "name":
+          message = "이미 사용 중인 닉네임입니다.";
+          break;
+        default:
+          message = "중복된 값이 있습니다.";
+      }
+
+      req.flash("error", message);
+      return res.render("editProfile", {
+        user: { ...req.user.toJSON(), name, email },
+        messages: req.flash()
+      });
+    }
+
+    req.flash("error", "회원정보 수정 중 오류가 발생했습니다.");
+    res.redirect("/users/edit");
+  }
+};
+
+// 닉네임 중복 확인
+const checkNickname = async (req, res) => {
+  const { name } = req.query;
+
+  if (!name || !name.trim()) {
+    return res.json({
+      available: false,
+      message: "닉네임을 입력해주세요."
+    });
+  }
+
+  try {
+    const existing = await User.findOne({
+      where: {
+        name,
+        user_id: { [Op.ne]: req.user.user_id } // 본인 제외
+      }
+    });
+
+    if (existing) {
+      return res.json({
+        available: false,
+        message: "중복입니다."
+      });
+    }
+
+    return res.json({
+      available: true,
+      message: "사용 가능한 닉네임입니다."
+    });
+  } catch (err) {
+    console.error("닉네임 중복 확인 오류:", err);
+    return res.status(500).json({
+      available: false,
+      message: "오류가 발생했습니다."
+    });
+  }
+};
+
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+  try {
+    const user = await User.findByPk(req.user.user_id);
+    if (!user) {
+      req.flash("error", "사용자를 찾을 수 없습니다.");
+      return res.redirect("/users/mypage");
+    }
+
+    // 1) 현재 비밀번호 확인
+    user.passwordComparison(currentPassword, (err, userMatched) => {
+      if (err || !userMatched) {
+        req.flash("error", "현재 비밀번호가 올바르지 않습니다.");
+        return res.redirect("/users/change-password"); 
+      }
+
+      // 2) 새 비밀번호 일치 여부 확인
+      if (newPassword !== confirmNewPassword) {
+        req.flash("error", "새 비밀번호와 확인이 일치하지 않습니다.");
+        return res.redirect("/users/change-password");
+      }
+
+      // 3) 실제 비밀번호 변경
+      user.setPassword(newPassword, async (err, userWithPassword) => {
+        if (err) {
+          console.error("비밀번호 변경 오류:", err);
+          req.flash("error", "비밀번호 변경 중 오류가 발생했습니다.");
+          return res.redirect("/users/change-password");
+        }
+
+        await userWithPassword.save();
+
+        req.flash("success", "비밀번호가 성공적으로 변경되었습니다.");
+        return res.redirect("/users/change-password"); 
+      });
+    });
+  } catch (err) {
+    console.error("비밀번호 변경 처리 중 오류:", err);
+    req.flash("error", "비밀번호 변경 중 서버 오류가 발생했습니다.");
+    res.redirect("/users/change-password");
+  }
+};
+
+// 비밀번호 변경 폼 렌더링
+const showChangePasswordForm = (req, res) => {
+  // 로그인한 사용자 정보(req.user)를 넘겨서 아이디 표시
+  res.render("changePassword", {
+    user: req.user,
+    messages: req.flash()
+  });
+};
 
 module.exports = {
   create,
@@ -308,6 +578,13 @@ module.exports = {
   resetPasswordFinal,
   sendResetCode,
   verifyResetCode,
-  getMyPage
+  getMyPage,
+  showEditVerifyForm,
+  checkPasswordForEdit,
+  showEditProfileForm,
+  updateProfile,
+  checkNickname,
+  changePassword,
+  showChangePasswordForm
 };
 

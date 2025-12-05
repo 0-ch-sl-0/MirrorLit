@@ -56,3 +56,45 @@
   width: fit-content;
 }
 
+/* 설정 영역 버튼 묶음 */
+.settings-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end; /* 오른쪽 정렬 */
+}
+
+/* 공통 버튼 스타일 (factCheck 버튼 기반) */
+.btn-settings {
+  background-color: #f0f0f0;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* 회원정보 수정 버튼 – factCheck-Yes 계열 */
+.btn-settings-edit {
+  color: #3b79d4;
+  border-color: #484ab5;
+}
+
+.btn-settings-edit:hover {
+  background-color: #e8f5e9;
+}
+
+/* 비밀번호 변경 버튼 – factCheck-No 계열 */
+.btn-settings-password {
+  color: #c94949;
+  border-color: #c62828;
+}
+
+.btn-settings-password:hover {
+  background-color: #ffebee;
+}
+
