@@ -1,0 +1,164 @@
+<div class="container auth-container">
+  <h1>회원정보 수정</h1>
+
+  <% /*  Flash 메시지 (에러) */ %>
+  <% if (messages && messages.error && messages.error.length) { %>
+    <div class="alert alert-error">
+      <% messages.error.forEach(function (msg) { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% /*  Flash 메시지 (성공) */ %>
+  <% if (messages && messages.success && messages.success.length) { %>
+    <div class="alert alert-success">
+      <% messages.success.forEach(function (msg) { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% /* ---------------------------------------------------
+       1. 프로필 수정 메인 폼
+       - 아이디(수정불가)
+       - 닉네임 수정 + 중복확인
+       - 이메일 변경 + 인증코드 요청
+       - 이메일 인증 코드 입력
+       - 수정 완료 버튼 (action="update")
+     --------------------------------------------------- */ %>
+
+  <form action="/users/edit" method="POST">
+
+    <!-- 아이디 (변경 불가) -->
+    <div class="form-group">
+      <label for="id">아이디</label>
+      <input
+        type="text"
+        id="id"
+        name="id"
+        value="<%= user.id %>"
+        disabled
+	class="input-disabled"
+      />
+
+      <small class="field-help">아이디는 변경할 수 없습니다.</small>
+    </div>
+
+    <!-- 닉네임 입력 + 중복 확인 버튼 -->
+    <div class="form-group">
+      <label for="name">닉네임</label>
+
+      <!-- input과 버튼을 flex로 묶어서 한 줄 배치 -->
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value="<%= user.name %>"
+          required
+        />
+        <!-- 닉네임 중복 확인 버튼 (AJAX 요청) -->
+        <button type="button" id="btn-check-name" class="btn-secondary">
+          중복 확인
+        </button>
+      </div>
+
+      <small class="field-help">닉네임은 다른 사용자와 중복될 수 없습니다.</small>
+
+      <!-- AJAX 결과 메시지가 표시될 곳 -->
+      <div id="nickname-message" style="margin-top:4px; font-size:0.9rem;"></div>
+    </div>
+
+    <!-- 이메일 입력 + 인증코드 보내기 버튼 -->
+    <div class="form-group">
+      <label for="email">이메일</label>
+
+      <!-- 이메일 입력 + “인증코드 보내기” 버튼 한 줄 -->
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value="<%= user.email %>"
+          required
+        />
+
+        <!-- 이메일 인증코드 전송 (action="send-code") -->
+        <button type="submit" name="action" value="send-code" class="btn-secondary">
+          인증코드 보내기
+        </button>
+      </div>
+
+      <small class="field-help">
+        이메일을 변경하려면 먼저 새 이메일로 인증코드를 보내주세요.
+      </small>
+    </div>
+
+    <!-- 이메일 인증 코드 입력 -->
+    <div class="form-group">
+      <label for="emailCode">이메일 인증 코드</label>
+
+      <input
+        type="text"
+        id="emailCode"
+        name="emailCode"
+        placeholder="인증코드 입력"
+      />
+
+      <small class="field-help">
+        인증 코드를 입력한 뒤 "수정 완료"를 눌러주세요.
+      </small>
+    </div>
+
+    <!-- 수정 완료 버튼: action="update" -->
+    <button type="submit" name="action" value="update" class="btn-primary">
+      수정 완료
+    </button>
+  </form>
+
+  <% /* ---------------------------------------------------
+       2. 닉네임 중복 확인
+       - /users/check-name?name= 닉네임 으로 GET 요청
+       - 성공/오류 메시지를 nickname-message에 표시
+     --------------------------------------------------- */ %>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const btnCheckName = document.getElementById("btn-check-name");
+      const inputName = document.getElementById("name");
+      const nicknameMsg = document.getElementById("nickname-message");
+
+      if (!btnCheckName) return;
+
+      btnCheckName.addEventListener("click", function () {
+        const name = inputName.value.trim();
+
+        if (!name) {
+          nicknameMsg.textContent = "닉네임을 입력해주세요.";
+          nicknameMsg.style.color = "red";
+          return;
+        }
+
+        fetch(`/users/check-name?name=${encodeURIComponent(name)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            nicknameMsg.textContent = data.message;
+
+            if (data.available) {
+              nicknameMsg.style.color = "green";  // 사용 가능
+            } else {
+              nicknameMsg.style.color = "red";    // 중복 또는 에러
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            nicknameMsg.textContent = "오류가 발생했습니다.";
+            nicknameMsg.style.color = "red";
+          });
+      });
+    });
+  </script>
+
+</div>
+

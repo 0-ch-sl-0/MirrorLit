@@ -38,6 +38,56 @@ router.post("/verify-code", userController.verifyResetCode);
 
 router.get("/mypage", ensureAuthenticated, userController.getMyPage);
 
+//회원정보수정 추가한 내용("/logout"이전까지)
+// 회원정보 수정 – 비밀번호 확인 페이지
+router.get(
+  "/edit/verify",
+  ensureAuthenticated,
+  userController.showEditVerifyForm
+);
+
+// 회원정보 수정 – 비밀번호 확인 처리
+router.post(
+  "/edit/verify",
+  ensureAuthenticated,
+  userController.checkPasswordForEdit
+);
+
+// 회원정보 수정 폼
+router.get(
+  "/edit",
+  ensureAuthenticated,
+  userController.showEditProfileForm
+);
+
+// 닉네임 중복 확인
+router.get(
+  "/check-name",
+  ensureAuthenticated,
+  userController.checkNickname
+);
+
+// 비밀번호 변경 폼
+router.get(
+  "/change-password",
+  ensureAuthenticated,
+  userController.showChangePasswordForm
+);
+
+// 비밀번호 변경 처리
+router.post(
+  "/change-password",
+  ensureAuthenticated,
+  userController.changePassword
+);
+
+// 회원정보 수정 저장
+router.post(
+  "/edit",
+  ensureAuthenticated,
+  userController.updateProfile
+);
+
 router.get("/logout", userController.logout);
 //router.get("/logout", userController.logout, userController.redirectView);
 
