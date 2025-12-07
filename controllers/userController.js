@@ -514,6 +514,7 @@ const checkNickname = async (req, res) => {
   }
 };
 
+//비밀번호 변경 함수
 const changePassword = async (req, res) => {
   const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
