@@ -27,6 +27,9 @@ pipeline {
         }
 
     stage('Build Docker Image') {
+        when {
+            branch 'master'
+            }
             steps {
                 script {
                     sh "docker build -t ${DOCKERHUB_REPO}:${env.BUILD_NUMBER} ."
@@ -35,6 +38,9 @@ pipeline {
         }
 
         stage('Push to DockerHub') {
+            when {
+                branch 'master'
+            }
             steps {
                 script {
                     docker.withRegistry('', 'dockerhub') {     
