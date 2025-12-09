@@ -27,3 +27,8 @@ module.exports = (sequelize, Sequelize) => {
     });
   return articleImage;
 }
+// [Review]
+//  현재 article_id는 unique: true가 설정되어 있어,
+// 하나의 기사당 하나의 이미지만 저장 가능한 구조.
+// 다중 이미지 업로드 기능이 추가될 가능성을 고려한다면
+// unique 제약을 제거하고 1:N 관계로 확장하는 구조가 고려될 만함.

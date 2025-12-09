@@ -186,3 +186,7 @@ exports.deleteAlertAll = async (req, res) => {
     res.status(500).json({message: "모든 알림 삭제 실패" });
   }
 };
+// [REVIEW]
+// 현재 알림 일괄 처리 로직에서 forEach + await를 사용하면,
+// await이 정상적으로 작동하지 않아 비동기 작업이 병렬 실행될 수 있음.
+// 비동기 순차 처리가 필요한 작업은 forEach 대신 for...of를 사용하여 async/await 보장하는 것이 좋음.
